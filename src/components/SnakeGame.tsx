@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import io, { Socket } from "socket.io-client";
 import {
   ChevronUp,
   ChevronLeft,
@@ -68,6 +69,7 @@ const SnakeGame: React.FC = () => {
     keyboard: 0,
     mobile: 0,
   });
+  const socket: Socket = io();
 
   // Sound effects
   const [playMove] = useSound("/sounds/move.mp3", { volume: 0.25 });
@@ -276,6 +278,18 @@ const SnakeGame: React.FC = () => {
     resetGame();
   };
 
+  useEffect(() => {
+    // Listen for updates to the highest score
+    socket.on("highestScore", (score: number) => {
+      setHighestScore(score);
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      socket.off("highestScore");
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-4 items-center justify-center w-full max-w-sm mx-auto">
       <div className="flex justify-center space-x-2">
@@ -378,6 +392,9 @@ const SnakeGame: React.FC = () => {
       <div className="mt-4 text-center">
         <p className="text-lg font-semibold text-green-700 dark:text-green-300">
           Skills Collected: {score}
+        </p>
+        <p className="text-lg font-semibold text-green-700 dark:text-green-300">
+          Highest Score: {highestScore}
         </p>
         {gameOver && (
           <motion.div
